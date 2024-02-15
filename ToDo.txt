@@ -1,0 +1,13 @@
+
+Display:
+• make an x planel showing the x-magnitude of signal
+• make an y planel showing the y-magnitude of signal
+• add a pause/play button (bottom right corner)
+
+Functionality:
+• add a function for rotation along x-y (done), x-z, and z-y planes
+• add a function for tranlsational movement along x-y plane
+• add a function for tranlsational movement in z-direction
+
+External:
+• output the conjoined signals as a .wav file
