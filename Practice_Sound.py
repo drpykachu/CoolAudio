@@ -9,7 +9,7 @@ from math import sin, cos, radians
 pygame.init()
 
 # Constants
-x = 200
+x = 860
 y = 45
 os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (x,y)
 WIDTH, HEIGHT = 800, 800
@@ -34,7 +34,7 @@ img = pygame.image.load('rgbeat.png')
 pygame.display.set_icon(img)
 
 # Load audio file
-audio_file = "right_audio.wav"  # Replace with your audio file path
+audio_file = "left_audio.wav"  # Replace with your audio file path
 wf = wave.open(audio_file, 'rb')
 sample_width = wf.getsampwidth()
 nchannels = wf.getnchannels()
@@ -46,9 +46,8 @@ pygame.mixer.init(frequency=framerate)
 pygame.mixer.music.load(audio_file)
 pygame.mixer.music.play(-1)  # Play the music indefinitely
 
-chunk_size = 1024
-pertubation = 35
-rotation_speed = 0.2
+
+
 
 def circle(radius):
     theta = np.linspace(0,2*3.14,chunk_size)
@@ -123,13 +122,48 @@ def rotation(data,plane,speed,direction = 'cw', center_point=(0, 0)):
         print('fuck me')
 
     return [x,y]
+
+bank_x = 0
+bank_y = 0
+
+def translation(data): 
+    global bank_x, bank_y
+    k = 0
+    if k == 0:
+        if np.max(data[0])+bank_x >= WIDTH or np.min(data[0])-WIDTH+bank_x <= -WIDTH:
+            direction[0] = -direction[0]
+            k = 1
         
-signal = np.array(shape(300,6))
+    g=0
+    if g == 0:     
+        if np.max(data[1])+bank_y >= HEIGHT or np.min(data[1])-HEIGHT+bank_y <= -HEIGHT:
+            direction[1] = -direction[1]
+#             print(direction[1])
+            g = 1        
+    bank_x = bank_x + direction[0]
+    bank_y = bank_y + direction[1]
+ 
+        
+
+        
+    x = np.array(data[0]) + np.array(np.ones(chunk_size)*bank_x)
+    y = np.array(data[1]) + np.array(np.ones(chunk_size)*bank_y)
+        
+    return [x,y]
+    
+
+chunk_size = 1024
+pertubation = 20
+rotation_speed = 3
+direction = [-0.5,1]
+signal = np.array(shape(200,6))
 # signal = np.array(circle(300))
+
 
 # Main loop
 running = True
 rotation_counter = 1
+translation_counter = 1
 
 while running:
     
@@ -176,8 +210,9 @@ while running:
     x_axis = np.array((left_channel_normalized) * WIDTH / 2 / pertubation) + signal[0]
     y_axis = np.array((right_channel_normalized) * HEIGHT / 2 / pertubation) + signal[1]
     
-    x_axis, y_axis = rotation([x_axis,y_axis],'x-y',rotation_speed*rotation_counter,direction = 'cw')
-    x_signal,y_signal = rotation([signal[0],signal[1]],'x-y',rotation_speed*rotation_counter,direction = 'cw')
+    x_axis, y_axis = translation(rotation([x_axis,y_axis],'x-y',rotation_speed*rotation_counter,direction = 'cw'))
+    x_signal,y_signal = translation(rotation([signal[0],signal[1]],'x-y',rotation_speed*rotation_counter,direction = 'cw'))
+    
     
     # Draw waveform
     for i in range(len(left_channel_normalized) - 1):
@@ -188,11 +223,11 @@ while running:
         y2 = y_axis[i+1]
         
         
-        pygame.draw.line(screen, (240, 0, 240), (x1, y1), (x2, y2), 5)  # Draw a line between consecutive points
-        pygame.draw.circle(screen, (240, 240, 240), (x_signal[i], y_signal[i]), 2)  # Draw a point for each sample
-        pygame.draw.circle(screen, (240, 240, 240), (WIDTH/2, HEIGHT/2), 1)  # Draw a point for each sample
+        pygame.draw.line(screen, (255, 100, 255), (x1, y1), (x2, y2), 5)  # Draw a line between consecutive points
+        pygame.draw.circle(screen, (150, 150, 150), (x_signal[i], y_signal[i]), 2)  # Draw a point for each sample
+#         pygame.draw.circle(screen, (240, 240, 240), (WIDTH/2, HEIGHT/2), 1)  # Draw a point for each sample
     
-    pygame.draw.line(screen, (240, 0, 240), (x_axis[0], y_axis[0]), (x_axis[-1], y_axis[-1]), 5)  # closes the drawn loop
+    pygame.draw.line(screen, (255, 100, 255), (x_axis[0], y_axis[0]), (x_axis[-1], y_axis[-1]), 5)  # closes the drawn loop
 
      # Update the display
     pygame.display.flip()
@@ -200,6 +235,7 @@ while running:
     # Cap the frame rate
     clock.tick(FPS)
     rotation_counter = rotation_counter + 1
+    translation_counter = translation_counter + 1
 pygame.quit()
 
 
